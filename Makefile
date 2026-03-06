@@ -19,6 +19,18 @@ test:
 	@echo "运行测试..."
 	$(GO) test $(GOFLAGS) ./...
 
+# 运行测试并显示覆盖率
+test-coverage:
+	@echo "运行测试并生成覆盖率报告..."
+	$(GO) test -v -coverprofile=coverage.out ./...
+	$(GO) tool cover -html=coverage.out -o coverage.html
+	@echo "覆盖率报告已生成: coverage.html"
+
+# 运行基准测试
+bench:
+	@echo "运行基准测试..."
+	$(GO) test -bench=. -benchmem ./...
+
 # 安装依赖
 install:
 	@echo "安装依赖..."
@@ -37,14 +49,17 @@ run:
 clean:
 	@echo "清理编译产物..."
 	@rm -f $(BINARY_NAME)
+	@rm -f coverage.out coverage.html
 	@echo "清理完成"
 
 # 显示帮助信息
 help:
 	@echo "可用的命令:"
-	@echo "  make build    - 编译项目"
-	@echo "  make test     - 运行测试"
-	@echo "  make install  - 安装依赖"
+	@echo "  make build           - 编译项目"
+	@echo "  make test            - 运行测试"
+	@echo "  make test-coverage   - 运行测试并生成覆盖率报告"
+	@echo "  make bench           - 运行基准测试"
+	@echo "  make install         - 安装依赖"
 	@echo "  make run PDF=<文件路径> - 运行程序"
-	@echo "  make clean    - 清理编译产物"
-	@echo "  make help     - 显示此帮助信息"
+	@echo "  make clean           - 清理编译产物"
+	@echo "  make help            - 显示此帮助信息"
