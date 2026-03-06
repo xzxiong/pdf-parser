@@ -42,52 +42,60 @@ func extractHeadings(pdfPath string) ([]Heading, error) {
 
 	// 递归提取所有标题
 	var headings []Heading
-	extractOutlineItems(outlines.Entries(), 1, &headings, pdfReader)
+	extractOutlineItems(outlines.Entries, 1, &headings)
 
 	return headings, nil
 }
 
 // extractOutlineItems 递归提取大纲项
-func extractOutlineItems(items []*model.OutlineItem, level int, headings *[]Heading, reader *model.PdfReader) {
+func extractOutlineItems(items []*model.OutlineItem, level int, headings *[]Heading) {
 	for _, item := range items {
-		// 获取页码
-		pageNum := getPageNumber(item, reader)
-
 		// 添加标题
 		*headings = append(*headings, Heading{
 			Title: item.Title,
 			Level: level,
-			Page:  pageNum,
+			Page:  item.Dest.Page,
 		})
 
 		// 递归处理子项
-		if len(item.Entries()) > 0 {
-			extractOutlineItems(item.Entries(), level+1, headings, reader)
+		if len(item.Entries) > 0 {
+			extractOutlineItems(item.Entries, level+1, headings)
 		}
 	}
 }
 
-// getPageNumber 获取大纲项对应的页码
-func getPageNumber(item *model.OutlineItem, reader *model.PdfReader) int64 {
-	if item.Dest != nil {
-		// 尝试从目标获取页码
-		if page := item.Dest.GetPage(reader); page != nil {
-			numPages, _ := reader.GetNumPages()
-			for i := 1; i <= numPages; i++ {
-				p, _ := reader.GetPage(i)
-				if p == page {
-					return int64(i)
-				}
-			}
-		}
-	}
-	return 0
+// printUsage 打印使用说明
+func printUsage() {
+	fmt.Println("PDF 标题解析工具")
+	fmt.Println()
+	fmt.Println("用法:")
+	fmt.Println("  pdf-parser <PDF文件路径>")
+	fmt.Println("  pdf-parser -h | --help")
+	fmt.Println()
+	fmt.Println("参数:")
+	fmt.Println("  <PDF文件路径>    要解析的 PDF 文件路径")
+	fmt.Println("  -h, --help       显示此帮助信息")
+	fmt.Println()
+	fmt.Println("示例:")
+	fmt.Println("  pdf-parser document.pdf")
+	fmt.Println("  pdf-parser /path/to/file.pdf")
+	fmt.Println()
+	fmt.Println("说明:")
+	fmt.Println("  此工具从 PDF 文件中提取标题大纲（目录/书签）信息")
+	fmt.Println("  输出包括标题文字、层级和所在页码")
 }
 
 func main() {
+	// 检查参数
 	if len(os.Args) < 2 {
-		fmt.Println("用法: go run main.go <PDF文件路径>")
+		printUsage()
 		os.Exit(1)
+	}
+
+	// 处理帮助参数
+	if os.Args[1] == "-h" || os.Args[1] == "--help" {
+		printUsage()
+		os.Exit(0)
 	}
 
 	pdfPath := os.Args[1]
