@@ -1,4 +1,4 @@
-module pdf-parser
+module github.com/xzxiong/pdf-parser
 
 go 1.24
 
