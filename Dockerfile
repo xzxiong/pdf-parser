@@ -9,6 +9,7 @@ ARG GOPRIVATE="github.com/matrixone-cloud,github.com/matrixorigin"
 
 # 安装构建依赖
 #RUN apk add --no-cache git ca-certificates
+RUN apt-get update && apt-get install -y git ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # 设置工作目录
 WORKDIR /build
