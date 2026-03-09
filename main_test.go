@@ -1,7 +1,11 @@
 package main
 
 import (
+	"os"
+	"strings"
 	"testing"
+
+	"github.com/unidoc/unipdf/v3/model"
 )
 
 func TestExtractHeadings135Title(t *testing.T) {
@@ -134,11 +138,12 @@ func TestExtractHeadingsFromOutline(t *testing.T) {
 	// 输出所有标题用于调试
 	t.Log("提取到的所有标题:")
 	for i, h := range headings {
-		indent := ""
+		var indent strings.Builder
+		indent.Grow((h.Level - 1) * 2)
 		for j := 1; j < h.Level; j++ {
-			indent += "  "
+			indent.WriteString("  ")
 		}
-		t.Logf("%d. %s级别 %d: %s (第 %d 页)", i+1, indent, h.Level, h.Title, h.Page)
+		t.Logf("%d. %s级别 %d: %s (第 %d 页)", i+1, indent.String(), h.Level, h.Title, h.Page)
 	}
 }
 
@@ -218,6 +223,135 @@ func BenchmarkExtractHeadings(b *testing.B) {
 		_, err := extractHeadings(pdfPath)
 		if err != nil {
 			b.Fatalf("提取标题失败: %v", err)
+		}
+	}
+}
+
+// TestExtractTextBlocks 测试 extractTextBlocks 函数
+func TestExtractTextBlocks(t *testing.T) {
+	// 打开测试 PDF 文件
+	pdfPath := "135_title.pdf"
+	f, err := os.Open(pdfPath)
+	if err != nil {
+		t.Fatalf("无法打开文件: %v", err)
+	}
+	defer f.Close()
+
+	// 创建 PDF 阅读器
+	pdfReader, err := model.NewPdfReader(f)
+	if err != nil {
+		t.Fatalf("无法读取 PDF: %v", err)
+	}
+
+	// 提取文本块
+	blocks, err := extractTextBlocks(pdfReader)
+	if err != nil {
+		t.Fatalf("提取文本块失败: %v", err)
+	}
+
+	// 验证提取到了文本块
+	if len(blocks) == 0 {
+		t.Fatal("未提取到任何文本块")
+	}
+
+	t.Logf("成功提取 %d 个文本块", len(blocks))
+
+	// 验证文本块的基本属性
+	pageCount := make(map[int64]int)
+	for _, block := range blocks {
+		// 检查页码是否合理
+		if block.Page < 1 {
+			t.Errorf("文本块页码 %d 不合理", block.Page)
+		}
+
+		// 检查内容是否为空
+		if block.Content == "" {
+			t.Error("发现空文本块")
+		}
+
+		// 检查高度是否合理
+		if block.Height <= 0 {
+			t.Errorf("文本块高度 %f 不合理", block.Height)
+		}
+
+		// 检查 Y 坐标是否在合理范围内
+		if block.YPos < 0 || block.YPos > block.Height {
+			t.Errorf("文本块 Y 坐标 %f 超出页面高度 %f", block.YPos, block.Height)
+		}
+
+		pageCount[block.Page]++
+	}
+
+	// 验证至少有多个页面的文本块
+	if len(pageCount) < 2 {
+		t.Errorf("只提取到 %d 个页面的文本块，期望至少 2 个", len(pageCount))
+	}
+
+	t.Logf("文本块分布在 %d 个页面", len(pageCount))
+
+	// 输出前几个文本块用于调试
+	t.Log("前 5 个文本块:")
+	for i := 0; i < min(5, len(blocks)); i++ {
+		block := blocks[i]
+		content := block.Content
+		if len(content) > 50 {
+			content = content[:50] + "..."
+		}
+		t.Logf("  块 %d: 页 %d, Y=%.2f, 高度=%.2f, 内容='%s'",
+			i+1, block.Page, block.YPos, block.Height, content)
+	}
+}
+
+// TestExtractTextBlocksPositionInfo 测试文本块的位置信息
+func TestExtractTextBlocksPositionInfo(t *testing.T) {
+	pdfPath := "135_title.pdf"
+	f, err := os.Open(pdfPath)
+	if err != nil {
+		t.Fatalf("无法打开文件: %v", err)
+	}
+	defer f.Close()
+
+	pdfReader, err := model.NewPdfReader(f)
+	if err != nil {
+		t.Fatalf("无法读取 PDF: %v", err)
+	}
+
+	blocks, err := extractTextBlocks(pdfReader)
+	if err != nil {
+		t.Fatalf("提取文本块失败: %v", err)
+	}
+
+	// 按页面分组
+	pageBlocks := make(map[int64][]TextBlock)
+	for _, block := range blocks {
+		pageBlocks[block.Page] = append(pageBlocks[block.Page], block)
+	}
+
+	// 验证每个页面的文本块位置分布
+	for page, blocks := range pageBlocks {
+		if len(blocks) == 0 {
+			continue
+		}
+
+		// 计算相对位置分布
+		var topCount, middleCount, bottomCount int
+		for _, block := range blocks {
+			relativePos := block.YPos / block.Height
+			if relativePos > 0.85 {
+				topCount++
+			} else if relativePos < 0.15 {
+				bottomCount++
+			} else {
+				middleCount++
+			}
+		}
+
+		t.Logf("第 %d 页: 顶部 %d 块, 中间 %d 块, 底部 %d 块",
+			page, topCount, middleCount, bottomCount)
+
+		// 验证至少有一些文本块在中间区域（正文区域）
+		if middleCount == 0 && len(blocks) > 3 {
+			t.Logf("警告: 第 %d 页没有中间区域的文本块", page)
 		}
 	}
 }

@@ -1,0 +1,28 @@
+# 测试文件
+*_test.go
+testdata/
+coverage.out
+coverage.html
+
+# 构建产物
+pdf-parser
+*.exe
+
+# PDF 文件
+*.pdf
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Kiro
+.kiro/
+
+# 文档
+README.md
+TEST_GUIDE.md
+Makefile
+
+# 其他
+.DS_Store
