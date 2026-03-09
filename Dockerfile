@@ -19,11 +19,11 @@ WORKDIR /build
 
 # 复制源代码
 COPY . ./
-RUN go mod download
 
 RUN git config --global url."https://${GITHUB_ACCESS_TOKEN}:@github.com/".insteadOf "https://github.com/"
 RUN go env -w GOPROXY=${GOPROXY} GOPRIVATE="$GOPRIVATE" GOMODCACHE="$GOMODCACHE"
 
+RUN go mod tidy
 
 # 构建二进制文件
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s" -o pdf-parser .
