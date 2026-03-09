@@ -2,8 +2,25 @@
 
 ## 构建镜像
 
+### 默认构建（使用国内代理）
+
 ```bash
 docker build -t pdf-parser .
+```
+
+默认使用 `https://goproxy.cn` 作为 Go 模块代理，加速依赖下载。
+
+### 自定义 GOPROXY
+
+```bash
+# 使用官方代理
+docker build --build-arg GOPROXY=https://proxy.golang.org,direct -t pdf-parser .
+
+# 使用其他代理
+docker build --build-arg GOPROXY=https://goproxy.io,direct -t pdf-parser .
+
+# 不使用代理
+docker build --build-arg GOPROXY=direct -t pdf-parser .
 ```
 
 ## 使用方法
