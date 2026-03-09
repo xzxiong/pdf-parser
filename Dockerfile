@@ -7,9 +7,12 @@ ARG GOPROXY="https://goproxy.cn,direct"
 ARG GOPRIVATE="github.com/matrixone-cloud,github.com/matrixorigin"
 #ARG RACE_OPT=""
 
-# 安装构建依赖
-#RUN apk add --no-cache git ca-certificates
-RUN apt-get update && apt-get install -y git ca-certificates && rm -rf /var/lib/apt/lists/*
+# 安装构建依赖（根据操作系统选择 apk 或 apt-get）
+RUN if [ -f /etc/alpine-release ]; then \
+        apk add --no-cache git ca-certificates; \
+    else \
+        apt-get update && apt-get install -y git ca-certificates && rm -rf /var/lib/apt/lists/*; \
+    fi
 
 # 设置工作目录
 WORKDIR /build
@@ -28,8 +31,12 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s" -o 
 # 运行阶段
 FROM ubuntu:22.04
 
-# 安装运行时依赖
-#RUN apk --no-cache add ca-certificates
+# 安装运行时依赖（根据操作系统选择 apk 或 apt-get）
+RUN if [ -f /etc/alpine-release ]; then \
+        apk add --no-cache ca-certificates; \
+    else \
+        apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*; \
+    fi
 
 # 创建非 root 用户
 #RUN addgroup -g 1000 appuser && adduser -D -u 1000 -G appuser appuser
