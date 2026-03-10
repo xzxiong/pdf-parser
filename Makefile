@@ -1,4 +1,4 @@
-.PHONY: build test clean run install help compose-up compose-down
+.PHONY: build test clean run install help compose-up compose-down login-pdf-parser
 
 # 变量定义
 BINARY_NAME=pdf-parser
@@ -53,6 +53,10 @@ compose-up:
 compose-down:
 	sudo docker compose -f docker-compose.yml down
 
+# 进入 pdf-parser 容器
+login-pdf-parser:
+	sudo docker exec -it pdf-parser /bin/sh
+
 # 清理编译产物
 clean:
 	@echo "清理编译产物..."
@@ -72,4 +76,5 @@ help:
 	@echo "  make clean           - 清理编译产物"
 	@echo "  make compose-up      - 启动 docker-compose"
 	@echo "  make compose-down    - 停止 docker-compose"
+	@echo "  make login-pdf-parser - 进入 pdf-parser 容器"
 	@echo "  make help            - 显示此帮助信息"
