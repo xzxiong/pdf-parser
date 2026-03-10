@@ -1,7 +1,8 @@
 services:
   pdf-parser:
-    image: docker.io/jacksonxie/pdf-parser:arm64-local
+    image: registry.cn-hangzhou.aliyuncs.com/mocloud/pdf-parser:0.0.1-9b74978-260309
     container_name: pdf-parser
+    command: ["pdf-parser", "--sleep", "--extract-title", "/app/data/135_title.pdf"]
     volumes:
       # 挂载本地目录到容器，可存放 PDF 输入/输出文件
       # 修改左侧路径为你的本地目录

@@ -47,11 +47,11 @@ run:
 
 # 启动 docker-compose
 compose-up:
-	docker-compose -f docker-compose.yml up -d
+	sudo docker compose -f docker-compose.yml up -d
 
 # 停止 docker-compose
 compose-down:
-	docker-compose -f docker-compose.yml down
+	sudo docker compose -f docker-compose.yml down
 
 # 清理编译产物
 clean:
