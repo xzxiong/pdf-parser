@@ -1,4 +1,4 @@
-.PHONY: build test clean run install help
+.PHONY: build test clean run install help compose-up compose-down
 
 # 变量定义
 BINARY_NAME=pdf-parser
@@ -45,6 +45,14 @@ run:
 	fi
 	$(GO) run . $(PDF)
 
+# 启动 docker-compose
+compose-up:
+	docker-compose -f docker-compose.yml up -d
+
+# 停止 docker-compose
+compose-down:
+	docker-compose -f docker-compose.yml down
+
 # 清理编译产物
 clean:
 	@echo "清理编译产物..."
@@ -62,4 +70,6 @@ help:
 	@echo "  make install         - 安装依赖"
 	@echo "  make run PDF=<文件路径> - 运行程序"
 	@echo "  make clean           - 清理编译产物"
+	@echo "  make compose-up      - 启动 docker-compose"
+	@echo "  make compose-down    - 停止 docker-compose"
 	@echo "  make help            - 显示此帮助信息"
